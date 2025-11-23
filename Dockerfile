@@ -21,4 +21,4 @@ RUN chown -R payments:payments .
 
 USER payments
 
-CMD gunicorn pay_stripe_system.wsgi:application --bind 0.0.0.0:$PORT
+CMD python manage.py runserver 0.0.0.0:$PORT
