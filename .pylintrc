@@ -13,6 +13,7 @@ disable =
     too-many-locals,
     unknown-option-value,
     import-outside-toplevel,
+    too-many-ancestors,
 
 [FORMAT]
 max-line-length=120
