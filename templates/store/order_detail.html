@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Order #{{ order.id }}</title>
+</head>
+<body>
+  <h1>Заказ #{{ order.id }}</h1>
+
+  <ul>
+    {% for oi in items %}
+      <li>
+        {{ oi.item.name }} — {{ oi.item.price }} {{ order.currency }} × {{ oi.quantity }}
+      </li>
+    {% endfor %}
+  </ul>
+
+  <p>Сумма по товарам: {{ totals.subtotal }} {{ order.currency }}</p>
+  {% if order.discount %}
+    <p>Скидка ({{ order.discount.name }}): −{{ totals.discount_amount }} {{ order.currency }}</p>
+  {% endif %}
+  {% if order.tax %}
+    <p>Налог ({{ order.tax.name }}): +{{ totals.tax_amount }} {{ order.currency }}</p>
+  {% endif %}
+  <h3>Итого: {{ totals.total }} {{ order.currency }}</h3>
+
+  <hr />
+
+  <form id="payment-form">
+    <div id="card-element"></div>
+    <button id="submit">Оплатить</button>
+  </form>
+
+  <script src="https://js.stripe.com/v3/"></script>
+  <script>
+    const stripe = Stripe("{{ stripe_publishable_key }}");
+    const elements = stripe.elements();
+    const cardElement = elements.create('card');
+    cardElement.mount('#card-element');
+
+    const form = document.getElementById('payment-form');
+    form.addEventListener('submit', async function (event) {
+    event.preventDefault();
+
+    const resp = await fetch("{% url 'order_create_intent' order_id=order.id %}", {
+        method: 'POST',
+        headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRFToken': '{{ csrf_token }}',
+        },
+    });
+
+    if (!resp.ok) {
+        alert('Ошибка на сервере при создании платежа');
+        return;
+    }
+
+    const data = await resp.json();
+    if (data.error) {
+        alert(data.error);
+        return;
+    }
+
+    const clientSecret = data.client_secret;
+
+    const result = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+        card: cardElement,
+        },
+    });
+
+    if (result.error) {
+        alert(result.error.message);
+    } else {
+        if (result.paymentIntent.status === 'succeeded') {
+        const resp2 = await fetch("{% url 'order_mark_paid' order_id=order.id %}", {
+            method: 'POST',
+            headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': '{{ csrf_token }}',
+            },
+        });
+
+        if (!resp2.ok) {
+            console.error('Не удалось обновить статус заказа');
+        }
+
+        window.location.href = "{% url 'stripe_success' %}";
+        }
+    }
+    });
+  </script>
+</body>
+</html>

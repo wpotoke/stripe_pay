@@ -17,15 +17,22 @@
 
     <button id="buy-button">Buy</button>
 
-    <script type="text/javascript" src="https://js.stripe.com/v3/"></script>
-    <script type="text/javascript">
-      var stripe = Stripe('{{ stripe_publish_key }}');
-
-      var buyButton = document.getElementById('buy-button');
+    <!-- Stripe.js -->
+    <script src="https://js.stripe.com/v3/"></script>
+    <script>
+      // ключ берём из контекста: stripe_publish_key
+      const stripe = Stripe('{{ stripe_publish_key }}');
+      const buyButton = document.getElementById('buy-button');
 
       buyButton.addEventListener('click', function () {
-        fetch('/store/buy/{{ item.id }}', { method: 'GET' })
+        // дергаем Django-view get_session
+        fetch("{% url 'get_session' item_id=item.id %}", {
+          method: 'GET',
+        })
           .then(function (response) {
+            if (!response.ok) {
+              throw new Error('Server error: ' + response.status);
+            }
             return response.json();
           })
           .then(function (data) {
@@ -33,7 +40,7 @@
               alert(data.error);
               return;
             }
-
+            // во view ты возвращаешь { "session_id": ... }
             return stripe.redirectToCheckout({ sessionId: data.session_id });
           })
           .then(function (result) {
