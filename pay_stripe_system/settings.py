@@ -131,5 +131,15 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-STRIPE_PUBLISH_KEY = os.getenv("STRIPE_PUBLISH_KEY")
-STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
+
+# По идее тут должны быть разные ключи, немного упросил чтобы не создавать разные аккауты
+STRIPE_CONFIG = {
+    "RUB": {
+        "secret": os.getenv("STRIPE_SECRET_KEY"),
+        "publishable": os.getenv("STRIPE_PUBLISH_KEY"),
+    },
+    "USD": {
+        "secret": os.getenv("STRIPE_SECRET_KEY"),
+        "publishable": os.getenv("STRIPE_PUBLISH_KEY"),
+    },
+}
