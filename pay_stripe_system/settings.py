@@ -32,6 +32,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://stripe-pay-2zl1.onrender.com",
+]
 
 # Application definition
 
