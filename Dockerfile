@@ -21,4 +21,4 @@ RUN chown -R payments:payments .
 
 USER payments
 
-CMD python manage.py runserver 0.0.0.0:$PORT
+CMD bash -c "python manage.py migrate --noinput && python manage.py createsuperuser --noinput || true && python manage.py runserver 0.0.0.0:$PORT --noreload"
